@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technology Rivers - Design System Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        /* Force light mode colors throughout - prevent dark mode interference */
+        html {
+            background-color: #f9fafb !important; /* bg-gray-50 */
+        }
+
+        body {
+            background-color: #f9fafb !important; /* bg-gray-50 */
+            color: #111827 !important; /* text-gray-900 */
+        }
+
+        /* Ensure all direct children of body maintain light mode */
+        body > * {
+            color: inherit;
+        }
+
+        /* Headings */
+        h1, h2, h3, h4, h5, h6 {
+            color: #111827 !important; /* text-gray-900 */
+        }
+
+        /* Labels and text */
+        label {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        /* Paragraphs and descriptions */
+        p {
+            color: #4b5563 !important; /* text-gray-600 */
+        }
+
+        /* Form inputs */
+        textarea, input[type="text"], input[type="email"], input[type="number"] {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+            border-color: #d1d5db !important; /* border-gray-300 */
+        }
+
+        textarea:focus, input:focus {
+            border-color: #6366f1 !important; /* border-indigo-500 */
+            outline-color: #6366f1 !important;
+        }
+
+        /* Checkboxes and radio buttons - unchecked state */
+        input[type="checkbox"]:not(:checked),
+        input[type="radio"]:not(:checked) {
+            /* Force white background and visible border for unchecked state */
+            background-color: #ffffff !important;
+            background-image: none !important;
+            border: 1px solid #d1d5db !important; /* border-gray-300 */
+            border-width: 1px !important;
+            appearance: checkbox !important;
+            -webkit-appearance: checkbox !important;
+            -moz-appearance: checkbox !important;
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
+            min-height: 16px !important;
+            box-shadow: inset 0 0 0 1px #d1d5db !important;
+            filter: brightness(1) !important;
+            opacity: 1 !important;
+            /* Override any dark mode filters */
+            -webkit-filter: brightness(1) !important;
+        }
+
+        /* Checkboxes and radio buttons - checked state */
+        input[type="checkbox"]:checked,
+        input[type="radio"]:checked {
+            background-color: #6366f1 !important; /* indigo-500 */
+            border-color: #4f46e5 !important; /* indigo-600 */
+            accent-color: #6366f1 !important;
+            appearance: checkbox !important;
+            -webkit-appearance: checkbox !important;
+            -moz-appearance: checkbox !important;
+        }
+
+        /* General checkbox/radio styling */
+        input[type="checkbox"],
+        input[type="radio"] {
+            accent-color: #6366f1 !important; /* indigo-500 */
+            cursor: pointer !important;
+        }
+
+        input[type="checkbox"]:checked,
+        input[type="radio"]:checked {
+            background-color: #6366f1 !important;
+            border-color: #4f46e5 !important;
+        }
+
+        /* Checkbox/radio label text */
+        label .checkbox-label,
+        label .radio-label {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        /* Buttons - default state */
+        button:not(.preset-button):not(.active) {
+            color: inherit !important;
+        }
+
+        /* Cards and containers */
+        .bg-white {
+            background-color: #ffffff !important;
+        }
+
+        .bg-gray-50 {
+            background-color: #f9fafb !important;
+        }
+
+        /* Borders */
+        .border-gray-200 {
+            border-color: #e5e7eb !important;
+        }
+
+        .border-gray-300 {
+            border-color: #d1d5db !important;
+        }
+
+        /* Text colors */
+        .text-gray-500 {
+            color: #6b7280 !important;
+        }
+
+        .text-gray-600 {
+            color: #4b5563 !important;
+        }
+
+        .text-gray-700 {
+            color: #374151 !important;
+        }
+
+        .text-gray-900 {
+            color: #111827 !important;
+        }
+
+        .text-green-700 {
+            color: #15803d !important;
+        }
+
+        .text-green-800 {
+            color: #166534 !important;
+        }
+
+        .text-green-900 {
+            color: #14532d !important;
+        }
+
+        .text-indigo-600 {
+            color: #4f46e5 !important;
+        }
+
+        .text-indigo-900 {
+            color: #312e81 !important;
+        }
+
+        .text-blue-600 {
+            color: #2563eb !important;
+        }
+
+        /* Background colors */
+        .bg-green-50 {
+            background-color: #f0fdf4 !important;
+        }
+
+        .bg-green-100 {
+            background-color: #dcfce7 !important;
+        }
+
+        .bg-indigo-50 {
+            background-color: #eef2ff !important;
+        }
+
+        .bg-indigo-100 {
+            background-color: #e0e7ff !important;
+        }
+
+        .bg-blue-600 {
+            background-color: #2563eb !important;
+        }
+
+        .bg-blue-700 {
+            background-color: #1d4ed8 !important;
+        }
+
+        .bg-white {
+            background-color: #ffffff !important;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Preview Theme Support */
+        .preview-pane[data-theme="dark"] {
+            background-color: #1a202c;
+            color: #f7fafc;
+        }
+
+        .preview-pane {
+            transition: all 0.3s ease;
+        }
+
+        .preview-pane::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .preview-pane::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .preview-pane::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .preview-pane::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .color-swatch {
+            transition: transform 0.2s ease;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* Preset Button Styles - Higher specificity for Cursor browser */
+        .preset-button {
+            transition: all 0.2s ease;
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        .preset-button svg {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        .preset-button span {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        /* Preset Button Active State - Must override Tailwind */
+        button.preset-button.active,
+        .preset-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: #ffffff !important;
+            border-color: #667eea !important;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+        }
+
+        button.preset-button.active svg,
+        .preset-button.active svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+        }
+
+        button.preset-button.active span,
+        .preset-button.active span {
+            color: #ffffff !important;
+        }
+
+        .preset-button:hover:not(.active) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preset-button:hover:not(.active) svg {
+            color: #111827 !important; /* text-gray-900 */
+        }
+
+        .preset-button:hover:not(.active) span {
+            color: #111827 !important; /* text-gray-900 */
+        }
+
+        /* Field Highlight Animation */
+        @keyframes highlight {
+            0%, 100% {
+                background-color: transparent;
+            }
+            50% {
+                background-color: rgba(102, 126, 234, 0.1);
+            }
+        }
+
+        .field-highlight {
+            animation: highlight 1s ease-in-out;
+        }
+
+        /* Section Divider */
+        .section-divider {
+            border-top: 2px solid #e5e7eb;
+            margin: 24px 0;
+        }
+
+        /* Generate Button */
+        #generateBtn {
+            background-color: #4f46e5 !important; /* bg-indigo-600 */
+            color: #ffffff !important;
+        }
+
+        #generateBtn:hover {
+            background-color: #4338ca !important; /* bg-indigo-700 */
+        }
+
+        #generateBtn:disabled {
+            background-color: #9ca3af !important; /* bg-gray-400 */
+            color: #ffffff !important;
+        }
+
+        /* Download Buttons */
+        #downloadBtn {
+            background-color: #ffffff !important;
+            color: #166534 !important; /* text-green-800 */
+            border-color: #bbf7d0 !important; /* border-green-200 */
+        }
+
+        #downloadBtn:hover {
+            background-color: #dcfce7 !important; /* bg-green-100 */
+            border-color: #86efac !important; /* border-green-400 */
+        }
+
+        #downloadComponentsBtn {
+            background-color: #2563eb !important; /* bg-blue-600 */
+            color: #ffffff !important;
+        }
+
+        #downloadComponentsBtn:hover {
+            background-color: #1d4ed8 !important; /* bg-blue-700 */
+        }
+
+        /* Advanced Toggle Button */
+        #toggleAdvanced {
+            color: #4f46e5 !important; /* text-indigo-600 */
+        }
+
+        #toggleAdvanced:hover {
+            color: #4338ca !important; /* text-indigo-700 */
+        }
+
+        /* Theme Toggle */
+        #themeToggle {
+            background-color: #e5e7eb !important; /* bg-gray-200 */
+        }
+
+        #themeToggle[aria-checked="true"] {
+            background-color: #4f46e5 !important; /* bg-indigo-600 */
+        }
+
+        /* Results Section */
+        .bg-green-50 {
+            background-color: #f0fdf4 !important;
+        }
+
+        .border-green-200 {
+            border-color: #bbf7d0 !important;
+        }
+
+        .border-green-300 {
+            border-color: #86efac !important;
+        }
+
+        /* SVG Icons - ensure they inherit text color */
+        svg {
+            color: inherit;
+        }
+
+        /* Links */
+        a {
+            color: #4f46e5 !important; /* text-indigo-600 */
+        }
+
+        a:hover {
+            color: #4338ca !important; /* text-indigo-700 */
+        }
+
+        /* Form labels with checkboxes */
+        label input[type="checkbox"] + span,
+        label input[type="radio"] + span {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        /* Force light color scheme for form elements */
+        form, 
+        #advancedOptions,
+        label {
+            color-scheme: light !important;
+        }
+
+        /* Additional checkbox fix - target all possible states */
+        input[type="checkbox"] {
+            color-scheme: light !important;
+            background-color: #ffffff !important;
+            mix-blend-mode: normal !important;
+        }
+
+        input[type="checkbox"]:not(:checked) {
+            background-color: #ffffff !important;
+            background-image: none !important;
+            border: 1px solid #d1d5db !important;
+            /* Force the checkbox to be visible */
+            -webkit-appearance: checkbox !important;
+            appearance: checkbox !important;
+            /* Remove any dark mode filters */
+            filter: brightness(1) contrast(1) !important;
+            -webkit-filter: brightness(1) contrast(1) !important;
+        }
+
+        /* Ensure checkbox container doesn't have dark mode applied */
+        label:has(input[type="checkbox"]),
+        label:has(input[type="radio"]) {
+            color-scheme: light !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+        }
+
+        /* Force checkbox to render as light mode - override any parent filters */
+        input[type="checkbox"]::before,
+        input[type="checkbox"]::after {
+            background-color: transparent !important;
+        }
+
+        /* Target checkboxes with Tailwind classes - force light appearance */
+        input[type="checkbox"].h-4,
+        input[type="checkbox"][class*="h-4"],
+        input[type="checkbox"][class*="w-4"] {
+            background-color: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.25rem !important;
+            width: 16px !important;
+            height: 16px !important;
+            appearance: checkbox !important;
+            -webkit-appearance: checkbox !important;
+            color-scheme: light !important;
+            filter: brightness(1) !important;
+            -webkit-filter: brightness(1) !important;
+        }
+
+        input[type="checkbox"].h-4:not(:checked),
+        input[type="checkbox"][class*="h-4"]:not(:checked),
+        input[type="checkbox"][class*="w-4"]:not(:checked) {
+            background-color: #ffffff !important;
+            border-color: #d1d5db !important;
+            background-image: none !important;
+        }
+
+        /* Ensure label containers don't apply dark filters */
+        label.flex.items-center {
+            filter: none !important;
+            -webkit-filter: none !important;
+            color-scheme: light !important;
+            isolation: isolate !important;
+        }
+
+        /* Force all checkboxes to use explicit styling - most aggressive approach */
+        input[type="checkbox"] {
+            /* Remove any inherited dark mode styling */
+            background: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            /* Force checkbox appearance */
+            -webkit-appearance: checkbox !important;
+            appearance: checkbox !important;
+            /* Prevent any color inversion */
+            filter: brightness(1) invert(0) !important;
+            -webkit-filter: brightness(1) invert(0) !important;
+            /* Force light color scheme */
+            color-scheme: light !important;
+            /* Ensure size */
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
+            min-height: 16px !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Unchecked state - must be white with gray border */
+        input[type="checkbox"]:not(:checked) {
+            background-color: #ffffff !important;
+            background-image: none !important;
+            border: 1px solid #d1d5db !important;
+            /* Ensure no dark fill */
+            -webkit-appearance: checkbox !important;
+            appearance: checkbox !important;
+            /* Double-check no inversion */
+            filter: brightness(1) invert(0) contrast(1) !important;
+            -webkit-filter: brightness(1) invert(0) contrast(1) !important;
+        }
+
+        /* Footer text */
+        footer, .text-gray-500 {
+            color: #6b7280 !important;
+        }
+
+        /* Shadow colors - ensure they're visible */
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .shadow-md {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        /* Ensure all text in results is visible */
+        #resultsContent,
+        #resultsContent * {
+            color: #166534 !important; /* text-green-700 */
+        }
+
+        /* Preview pane text */
+        #previewPane {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+        }
+
+        #previewPane[data-theme="dark"] {
+            background-color: #1a202c !important;
+            color: #f7fafc !important;
+        }
+
+        /* System summary */
+        #systemSummary {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%) !important;
+        }
+
+        #summaryContent {
+            color: #374151 !important; /* text-gray-700 */
+        }
+
+        #summaryContent strong {
+            color: #111827 !important; /* text-gray-800 */
+        }
+
+        /* Force all text elements to use explicit colors */
+        div, span, p, label, button, a, h1, h2, h3, h4, h5, h6 {
+            color: inherit;
+        }
+
+        /* Override any potential dark mode text inversions */
+        * {
+            -webkit-text-fill-color: inherit;
+        }
+
+        /* Ensure borders are visible */
+        .border {
+            border-color: inherit;
+        }
+
+        /* Gallery elements */
+        #galHeader, #galHero, #galSidebar {
+            border-color: #d1d5db !important; /* border-gray-300 */
+        }
+
+        /* Component preview text */
+        #componentPreview, #typographyPreview, #spacingPreview {
+            color: inherit;
+        }
+
+        /* Ensure all buttons have proper text color unless specified */
+        button:not(.preset-button):not(.text-white) {
+            color: inherit;
+        }
+
+        /* Force white text on buttons with text-white class */
+        button.text-white,
+        button.bg-indigo-600.text-white,
+        button.bg-blue-600.text-white {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* Ensure button text is visible on colored backgrounds */
+        button.bg-indigo-600,
+        button.bg-blue-600 {
+            color: #ffffff !important;
+        }
+
+        /* Loading state text */
+        #loadingState p {
+            color: #4b5563 !important; /* text-gray-600 */
+        }
+
+        #progressText {
+            color: #6b7280 !important; /* text-gray-500 */
+        }
+
+        /* Validation details animations */
+        .validation-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .validation-details:not(.hidden) {
+            max-height: 2000px;
+            opacity: 1;
+            transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+        }
+
+        .validation-details.hidden {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        /* Smooth transitions for validation cards */
+        .validation-details > div {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hover effects for validation cards */
+        .validation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .validation-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Technology Rivers Branding */
+        .tr-logo {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        .tr-logo-technology {
+            color: #666666;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .tr-logo-rivers {
+            color: #669933;
+            font-weight: 600;
+            font-size: 1.2rem;
+            text-transform: lowercase;
+        }
+
+        .tr-logo-graphic {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5rem 0;
+        }
+
+        .tr-logo-line {
+            height: 3px;
+            background-color: #3399CC;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .tr-logo-circle {
+            width: 12px;
+            height: 12px;
+            background-color: #3399CC;
+            border-radius: 50%;
+            margin: 0 8px;
+        }
+
+        .tr-logo-arrow {
+            display: flex;
+            gap: 2px;
+            margin-left: 8px;
+        }
+
+        .tr-logo-arrow-line {
+            width: 2px;
+            height: 8px;
+            background-color: #3399CC;
+        }
+
+        .tr-logo-arrow-line:first-child {
+            transform: rotate(-20deg);
+        }
+
+        .tr-logo-arrow-line:last-child {
+            transform: rotate(20deg);
+        }
+
+        .tr-brand-blue {
+            color: #3399CC;
+        }
+
+        .tr-brand-green {
+            color: #669933;
+        }
+
+        .tr-bg-blue {
+            background-color: #3399CC;
+        }
+
+        .tr-bg-green {
+            background-color: #669933;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <!-- Technology Rivers Logo Header -->
+        <div class="text-center mb-12">
+            <div class="mb-6">
+                <a href="https://technologyrivers.com" target="_blank" rel="noopener noreferrer" class="inline-block hover:opacity-90 transition-opacity">
+                    <img src="https://technologyrivers.com/wp-content/uploads/2019/04/technology-rivers.png" 
+                         alt="Technology Rivers" 
+                         class="h-20 mx-auto"
+                         style="max-width: 280px; height: auto;">
+                </a>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                Design System Generator
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Just describe your product. Our AI agents will autonomously generate a complete, production-ready design system.
+                <br><span class="text-base text-gray-500 mt-2 block">Industry detection • Color systems • Component libraries • All automated</span>
+            </p>
+        </div>
+
+        <!-- Main Form -->
+        <div class="bg-white shadow-lg rounded-lg p-8">
+            <form id="designSystemForm" class="space-y-6">
+                <!-- Product Idea -->
+                <div>
+                    <label for="product_idea" class="block text-sm font-medium text-gray-700 mb-2">
+                        📋 Describe Your Product
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">
+                        AI agents will automatically detect your industry, target users, brand traits, and platforms from your description.
+                        Just tell us about your product and we'll generate a complete design system.
+                    </p>
+                    <textarea id="product_idea" name="product_idea" rows="5"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                        style="focus:border-color: #3399CC !important;"
+                        placeholder="Example: A healthcare app for patient management and appointment scheduling, helping doctors and patients connect seamlessly..." required></textarea>
+                    <div class="mt-2 text-xs text-gray-400 italic">
+                        💡 Tip: Be specific about your product's purpose, industry, and target users for best results
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button type="submit" id="generateBtn"
+                        class="tr-bg-blue hover:opacity-90 text-white font-medium py-3 px-8 rounded-md shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        style="background-color: #3399CC !important;">
+                        🚀 Generate Design System
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden mt-8 text-center">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600">Generating your design system...</p>
+                <div class="mt-4 text-sm text-gray-500">
+                    <p id="progressText">Analyzing requirements...</p>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="hidden mt-8">
+                <!-- Section 1: Success Header -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-500 rounded-full p-2">
+                                <svg class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-green-900">Design System Generated!</h3>
+                                <p class="text-sm text-green-700">Your production-ready design system is ready to download</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <button id="downloadBtn" aria-label="Download design system as JSON"
+                                class="bg-white px-4 py-2 border-2 border-green-300 rounded-md text-sm font-semibold text-green-800 hover:bg-green-100 hover:border-green-400 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                💾 Download JSON
+                            </button>
+                            <button id="downloadComponentsBtn" aria-label="Download React components as ZIP"
+                                class="px-4 py-2 rounded-md text-sm font-semibold text-white hover:opacity-90 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                style="background-color: #3399CC !important;">
+                                📦 Download Components (ZIP)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Strategy & Summary -->
+                <div class="bg-white border-2 border-indigo-200 rounded-lg overflow-hidden shadow-lg mb-6">
+                    <div class="px-6 py-4 border-b-2 border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <h4 class="text-base font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Strategy & System Summary
+                        </h4>
+                    </div>
+                    <div id="resultsContent" class="p-6 space-y-6">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Section 3: Live Design Preview -->
+                <div class="w-full">
+                    <div class="bg-white border-2 border-indigo-200 rounded-lg overflow-hidden shadow-lg">
+                        <div class="px-6 py-4 border-b-2 border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 flex justify-between items-center sticky top-0 z-10">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                </svg>
+                                <span class="text-base font-bold text-indigo-900 uppercase tracking-wider">Live Design Token Preview</span>
+                                <span id="comparisonBadge" class="hidden text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-medium"></span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-600 font-medium">Light</span>
+                                <button id="themeToggle" aria-label="Toggle dark mode preview" aria-checked="false"
+                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 bg-gray-200"
+                                    role="switch">
+                                    <span id="themeToggleHandle"
+                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+                                </button>
+                                <span class="text-sm text-gray-600 font-medium">Dark</span>
+                            </div>
+                        </div>
+                        <div id="previewPane" class="preview-pane p-8 overflow-y-auto" style="max-height: 800px;">
+                            <!-- System Summary -->
+                            <div id="systemSummary" class="mb-8 p-6 rounded-xl border-2 border-indigo-200 shadow-md bg-gradient-to-br from-indigo-50 to-purple-50">
+                                <div class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    System Overview
+                                </div>
+                                <div id="summaryContent" class="text-sm text-gray-700 space-y-3">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Color Palette Preview -->
+                            <div class="mb-8">
+                                <h4 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                    </svg>
+                                    Color Palette
+                                </h4>
+                                
+                                <!-- Primary Scale -->
+                                <div class="mb-6">
+                                    <div class="text-sm font-medium text-gray-700 mb-3">Primary Scale</div>
+                                    <div id="primaryScale" class="flex gap-1.5 h-16 rounded-lg overflow-hidden shadow-md border border-gray-200">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Neutral Scale -->
+                                <div class="mb-6">
+                                    <div class="text-sm font-medium text-gray-700 mb-3">Neutral Scale</div>
+                                    <div id="neutralScale" class="flex gap-1.5 h-16 rounded-lg overflow-hidden shadow-md border border-gray-200">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Semantic Colors -->
+                                <div class="mb-6">
+                                    <div class="text-sm font-medium text-gray-700 mb-3">Semantic Colors</div>
+                                    <div id="semanticColors" class="grid grid-cols-4 gap-3">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Typography Preview -->
+                            <div class="mb-8">
+                                <h4 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                                    </svg>
+                                    Typography
+                                </h4>
+                                <div id="typographyPreview" class="space-y-4 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Spacing Scale -->
+                            <div class="mb-8">
+                                <h4 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                                    </svg>
+                                    Spacing Scale
+                                </h4>
+                                <div id="spacingPreview" class="space-y-3 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Component Preview -->
+                            <div class="mb-8">
+                                <h4 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    Component Preview
+                                </h4>
+                                <div id="componentPreview" class="space-y-4 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Component Gallery -->
+                    <div class="border-t-2 border-gray-200 pt-8 mt-8">
+                        <h4 class="text-base font-bold text-gray-900 mb-6 uppercase tracking-wide flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                            </svg>
+                            Component Layout Preview
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Header Mockup -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                <span class="text-[10px] text-gray-400 font-medium mb-2 block">Application Header</span>
+                                <div id="galHeader"
+                                    class="h-12 w-full rounded border border-dashed flex items-center px-4 justify-between">
+                                    <div class="h-4 w-8 bg-gray-200 rounded"></div>
+                                    <div class="flex gap-2">
+                                        <div class="h-4 w-8 bg-gray-100 rounded"></div>
+                                        <div class="h-4 w-8 bg-gray-100 rounded"></div>
+                                    </div>
+                                    <div id="galHeaderBtn" class="h-6 w-12 rounded"></div>
+                                </div>
+                            </div>
+                            <!-- Hero Mockup -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                <span class="text-[10px] text-gray-400 font-medium mb-2 block">Hero Section</span>
+                                <div id="galHero"
+                                    class="h-24 w-full rounded border border-dashed flex flex-col items-center justify-center space-y-2">
+                                    <div class="h-3 w-2/3 bg-gray-200 rounded"></div>
+                                    <div class="h-2 w-1/2 bg-gray-100 rounded"></div>
+                                    <div id="galHeroBtn" class="h-6 w-16 rounded mt-1"></div>
+                                </div>
+                            </div>
+                            <!-- Sidebar Mockup -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                <span class="text-[10px] text-gray-400 font-medium mb-2 block">Navigation Sidebar</span>
+                                <div class="flex h-24 gap-3">
+                                    <div id="galSidebar"
+                                        class="w-12 h-full rounded border border-dashed flex flex-col p-2 space-y-2">
+                                        <div class="h-2 w-full bg-gray-200 rounded"></div>
+                                        <div class="h-2 w-full bg-gray-100 rounded"></div>
+                                        <div class="h-2 w-full bg-gray-100 rounded"></div>
+                                    </div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-3 w-full bg-gray-50 rounded"></div>
+                                        <div class="h-3 w-full bg-gray-50 rounded"></div>
+                                        <div class="h-3 w-3/4 bg-gray-50 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-12 text-center text-gray-500 text-sm">
+                <p>
+                    <a href="https://technologyrivers.com" target="_blank" rel="noopener noreferrer" 
+                       class="tr-brand-blue hover:underline" style="color: #3399CC;">
+                        Technology Rivers
+                    </a> • 
+                    Powered by CrewAI • Multi-agent autonomous design system generation
+                </p>
+            </div>
+        </div>
+
+        <script>
+            const form = document.getElementById('designSystemForm');
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingState = document.getElementById('loadingState');
+            const results = document.getElementById('results');
+            const progressText = document.getElementById('progressText');
+            const resultsContent = document.getElementById('resultsContent');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadComponentsBtn = document.getElementById('downloadComponentsBtn');
+
+            let generatedData = null;
+            let lastValidationResult = null;
+
+            // Toggle validation details
+            function toggleValidationDetails(detailsId, cardId) {
+                const details = document.getElementById(detailsId);
+                const button = document.querySelector(`[aria-controls="${detailsId}"]`);
+                if (!details || !button) return;
+                
+                const isHidden = details.classList.contains('hidden');
+                if (isHidden) {
+                    details.classList.remove('hidden');
+                    button.setAttribute('aria-expanded', 'true');
+                    button.querySelector('.details-text').textContent = 'Hide Details';
+                    button.querySelector('.details-icon').style.transform = 'rotate(180deg)';
+                } else {
+                    details.classList.add('hidden');
+                    button.setAttribute('aria-expanded', 'false');
+                    button.querySelector('.details-text').textContent = 'Show Details';
+                    button.querySelector('.details-icon').style.transform = 'rotate(0deg)';
+                }
+            }
+
+            // Regenerate with fixes
+            function regenerateWithFixes() {
+                if (!lastValidationResult) {
+                    alert('No validation data available. Please generate a design system first.');
+                    return;
+                }
+                
+                // Get all issues and warnings from validation
+                const allIssues = [];
+                const issueDetails = [];
+                
+                if (lastValidationResult.validation) {
+                    for (const [key, val] of Object.entries(lastValidationResult.validation)) {
+                        if (val.issues) {
+                            allIssues.push(...val.issues);
+                            val.issues.forEach(issue => {
+                                issueDetails.push({
+                                    category: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                    issue: issue,
+                                    fix: getFixSuggestion(issue)
+                                });
+                            });
+                        }
+                        if (val.warnings) {
+                            allIssues.push(...val.warnings);
+                            val.warnings.forEach(warning => {
+                                issueDetails.push({
+                                    category: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                    issue: warning,
+                                    fix: getFixSuggestion(warning)
+                                });
+                            });
+                        }
+                    }
+                }
+                
+                if (allIssues.length === 0) {
+                    alert('No issues found to fix. Your design system is already in good shape!');
+                    return;
+                }
+                
+                // Get original product idea (remove any previous fix hints)
+                let productIdea = document.getElementById('product_idea').value;
+                const fixHintMatch = productIdea.match(/^(.+?)\s*\[Fixes:.*?\]$/);
+                if (fixHintMatch) {
+                    productIdea = fixHintMatch[1].trim();
+                }
+                
+                // Create structured fix instructions
+                const topIssues = issueDetails.slice(0, 5);
+                const fixInstructions = topIssues.map(item => 
+                    `${item.category}: ${item.issue} - ${item.fix}`
+                ).join(' | ');
+                
+                // Enhance product idea with fix instructions
+                const enhancedIdea = productIdea + 
+                    (fixInstructions ? `\n\n[FIXES NEEDED: ${fixInstructions}]` : '');
+                
+                // Update the textarea
+                document.getElementById('product_idea').value = enhancedIdea;
+                
+                // Show feedback
+                const regenerateBtn = document.getElementById('regenerateBtn');
+                if (regenerateBtn) {
+                    const originalText = regenerateBtn.innerHTML;
+                    regenerateBtn.disabled = true;
+                    regenerateBtn.innerHTML = '<span style="color: #ffffff !important;">⏳ Preparing fixes...</span>';
+                    
+                    // Scroll to form
+                    document.getElementById('product_idea').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // Highlight the textarea briefly
+                    const textarea = document.getElementById('product_idea');
+                    textarea.style.borderColor = '#4f46e5';
+                    textarea.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
+                    setTimeout(() => {
+                        textarea.style.borderColor = '';
+                        textarea.style.boxShadow = '';
+                    }, 2000);
+                    
+                    // Show toast notification
+                    showToast(`Found ${allIssues.length} issue(s). Fix instructions added to your description.`, 'info');
+                    
+                    // Trigger form submission after a brief delay
+                    setTimeout(() => {
+                        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                        regenerateBtn.disabled = false;
+                        regenerateBtn.innerHTML = originalText;
+                    }, 1500);
+                } else {
+                    // Fallback if button not found
+                    document.getElementById('product_idea').value = enhancedIdea;
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+            }
+
+            // Toast notification function
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg max-w-md transition-all transform translate-x-full`;
+                
+                const bgColor = type === 'info' ? 'bg-blue-500' : type === 'success' ? 'bg-green-500' : 'bg-yellow-500';
+                toast.classList.add(bgColor);
+                toast.style.color = '#ffffff';
+                
+                toast.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #ffffff !important;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-sm font-medium" style="color: #ffffff !important;">${message}</p>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 10);
+                
+                // Remove after 4 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 4000);
+            }
+
+            // Fix suggestion helper function
+            function getFixSuggestion(issueText) {
+                const suggestions = {
+                    'contrast ratio': 'Increase color contrast by darkening the foreground or lightening the background. WCAG AA requires 4.5:1 for text.',
+                    'too cool': 'Adjust primary color to include more warm tones (red/yellow) to match the warmth principle.',
+                    'too warm': 'Adjust primary color to include more cool tones (blue/green) to match the warmth principle.',
+                    'Missing critical components': 'These components are essential for your product type. Consider regenerating with explicit component requirements.',
+                    'spacing base unit': 'Adjust spacing scale to match density preference. Dense UIs use 4px base, spacious use 8px+ base.',
+                    'Body text size': 'Increase body text size to improve readability for high clarity requirements.',
+                    'accessibility': 'Review color combinations and ensure they meet WCAG AA standards (4.5:1 contrast ratio for text).',
+                    'consistency': 'Ensure design tokens are used consistently across all components.',
+                    'warmth': 'Adjust color temperature to better match the design principles.',
+                    'density': 'Review spacing and sizing to match the density preference.'
+                };
+                
+                const lowerIssue = issueText.toLowerCase();
+                for (const [key, suggestion] of Object.entries(suggestions)) {
+                    if (lowerIssue.includes(key.toLowerCase())) {
+                        return suggestion;
+                    }
+                }
+                return 'Review this issue and adjust the design system accordingly.';
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Show loading state
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+                loadingState.classList.remove('hidden');
+                results.classList.add('hidden');
+
+                // Get form data - only product idea is needed
+                const formData = new FormData(form);
+                const requestData = new FormData();
+                requestData.append('product_idea', formData.get('product_idea'));
+
+                try {
+                    progressText.textContent = 'Analyzing requirements...';
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    progressText.textContent = 'Generating visual tokens...';
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    progressText.textContent = 'Designing components...';
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    progressText.textContent = 'Generating React component library...';
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        body: requestData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        generatedData = result.data;
+                        lastValidationResult = result;
+                        
+                        // Build reasoning section
+                        let reasoningHtml = '';
+                        if (result.reasoning) {
+                            reasoningHtml = `
+                                <div class="mb-6">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                        <div class="text-base font-bold text-gray-800 uppercase tracking-wide">Agent Reasoning</div>
+                                    </div>
+                                    <div class="space-y-4">
+                            `;
+                            
+                            if (result.reasoning.design_strategist) {
+                                const ds = result.reasoning.design_strategist;
+                                const userConf = ds.confidence ? (ds.confidence.users * 100).toFixed(0) : 0;
+                                const traitConf = ds.confidence ? (ds.confidence.traits * 100).toFixed(0) : 0;
+                                const platformConf = ds.confidence ? (ds.confidence.platforms * 100).toFixed(0) : 0;
+                                
+                                reasoningHtml += `
+                                    <div class="bg-blue-50 rounded-xl border-2 border-blue-200 p-5 shadow-sm">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                            </svg>
+                                            <div class="text-base font-bold text-blue-900">Design Strategist</div>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mb-4 leading-relaxed">${ds.reasoning}</p>
+                                `;
+                                
+                                if (ds.confidence) {
+                                    reasoningHtml += `
+                                        <div class="mb-4">
+                                            <div class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">Confidence Scores</div>
+                                            <div class="grid grid-cols-3 gap-3">
+                                                <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                                    <div class="text-xs text-gray-500 mb-1">Users</div>
+                                                    <div class="flex items-baseline gap-2">
+                                                        <div class="text-lg font-bold text-blue-700">${userConf}%</div>
+                                                        <div class="flex-1 h-2 bg-gray-200 rounded-full">
+                                                            <div class="h-2 bg-blue-600 rounded-full" style="width: ${userConf}%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                                    <div class="text-xs text-gray-500 mb-1">Traits</div>
+                                                    <div class="flex items-baseline gap-2">
+                                                        <div class="text-lg font-bold text-blue-700">${traitConf}%</div>
+                                                        <div class="flex-1 h-2 bg-gray-200 rounded-full">
+                                                            <div class="h-2 bg-blue-600 rounded-full" style="width: ${traitConf}%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                                    <div class="text-xs text-gray-500 mb-1">Platforms</div>
+                                                    <div class="flex items-baseline gap-2">
+                                                        <div class="text-lg font-bold text-blue-700">${platformConf}%</div>
+                                                        <div class="flex-1 h-2 bg-gray-200 rounded-full">
+                                                            <div class="h-2 bg-blue-600 rounded-full" style="width: ${platformConf}%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                                
+                                if (ds.overrides && ds.overrides.length > 0) {
+                                    reasoningHtml += `
+                                        <div class="bg-orange-100 border-2 border-orange-300 rounded-lg p-4">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
+                                                <span class="text-sm font-bold text-orange-800">Overrides Applied</span>
+                                            </div>
+                                            <div class="text-sm text-orange-700">${ds.overrides.join(' • ')}</div>
+                                        </div>
+                                    `;
+                                }
+                                
+                                reasoningHtml += `</div>`;
+                            }
+                            
+                            if (result.reasoning.visual_identity) {
+                                const vi = result.reasoning.visual_identity;
+                                reasoningHtml += `
+                                    <div class="bg-purple-50 rounded-xl border-2 border-purple-200 p-5 shadow-sm">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                            </svg>
+                                            <div class="text-base font-bold text-purple-900">Visual Identity</div>
+                                        </div>
+                                        <p class="text-sm text-gray-700 leading-relaxed">${vi.color_rationale || 'Color system generated based on design principles and industry standards.'}</p>
+                                    </div>
+                                `;
+                            }
+                            
+                            if (result.reasoning.component_architect) {
+                                const ca = result.reasoning.component_architect;
+                                reasoningHtml += `
+                                    <div class="bg-green-50 rounded-xl border-2 border-green-200 p-5 shadow-sm">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                            </svg>
+                                            <div class="text-base font-bold text-green-900">Component Architect</div>
+                                        </div>
+                                        <p class="text-sm text-gray-700 leading-relaxed">${ca.reasoning || 'Component inventory generated based on product needs and industry patterns.'}</p>
+                                    </div>
+                                `;
+                            }
+                            
+                            reasoningHtml += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Build validation section
+                        let validationHtml = '';
+                        if (result.validation) {
+                            const overallScore = Object.values(result.validation).reduce((sum, v) => sum + (v.score || 0), 0) / Object.keys(result.validation).length;
+                            const scorePercent = (overallScore * 100).toFixed(0);
+                            const scoreBgColor = overallScore >= 0.9 ? 'bg-green-100 border-green-400' : overallScore >= 0.7 ? 'bg-yellow-100 border-yellow-400' : 'bg-red-100 border-red-400';
+                            const scoreTextColor = overallScore >= 0.9 ? 'text-green-700' : overallScore >= 0.7 ? 'text-yellow-700' : 'text-red-700';
+                            const scoreBarColor = overallScore >= 0.9 ? 'bg-green-600' : overallScore >= 0.7 ? 'bg-yellow-600' : 'bg-red-600';
+                            
+                            validationHtml = `
+                                <div class="mb-6">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div class="text-base font-bold text-gray-800 uppercase tracking-wide">Quality Validation</div>
+                                    </div>
+                                    
+                                    <div class="${scoreBgColor} rounded-xl border-2 p-6 mb-4 shadow-md">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-8 h-8 ${scoreTextColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Overall Score</div>
+                                                    <div class="text-3xl font-bold ${scoreTextColor}">${scorePercent}%</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="h-3 bg-white rounded-full overflow-hidden mb-3">
+                                            <div class="h-full ${scoreBarColor} rounded-full transition-all" style="width: ${scorePercent}%"></div>
+                                        </div>
+                                        <div class="mt-3 text-sm ${scoreTextColor}">
+                                            ${overallScore >= 0.9 
+                                                ? 'Excellent! Your design system meets all quality standards.'
+                                                : overallScore >= 0.7 
+                                                ? 'Good quality with minor improvements needed. Review warnings below.'
+                                                : 'Needs attention. Review issues below and consider regenerating with fixes applied.'
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            `;
+                            
+                            for (const [key, val] of Object.entries(result.validation)) {
+                                const keyLabel = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                const scorePercent = ((val.score || 0) * 100).toFixed(0);
+                                const isValid = val.valid;
+                                const bgColor = isValid ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200';
+                                const textColor = isValid ? 'text-green-700' : 'text-yellow-700';
+                                const barColor = isValid ? 'bg-green-600' : 'bg-yellow-600';
+                                const iconColor = isValid ? 'text-green-600' : 'text-yellow-600';
+                                const hasIssues = val.issues && val.issues.length > 0;
+                                const hasWarnings = val.warnings && val.warnings.length > 0;
+                                const hasDetails = hasIssues || hasWarnings;
+                                const cardId = `validation-card-${key}`;
+                                const detailsId = `validation-details-${key}`;
+                                
+                                validationHtml += `
+                                    <div class="${bgColor} rounded-lg border-2 p-4 shadow-sm">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    ${isValid ? 
+                                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>' :
+                                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'
+                                                    }
+                                                </svg>
+                                                <div class="font-bold ${textColor}">${keyLabel}</div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="text-lg font-bold ${textColor}">${scorePercent}%</div>
+                                                ${hasDetails ? `
+                                                    <button onclick="toggleValidationDetails('${detailsId}', '${cardId}')" 
+                                                        class="text-xs ${textColor} hover:underline flex items-center gap-1 transition-all"
+                                                        aria-expanded="false" aria-controls="${detailsId}">
+                                                        <span class="details-text">Show Details</span>
+                                                        <svg class="w-4 h-4 transition-transform details-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        </svg>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="h-2 bg-white rounded-full mb-3 overflow-hidden">
+                                            <div class="h-full ${barColor} rounded-full transition-all" style="width: ${scorePercent}%"></div>
+                                        </div>
+                                        
+                                        ${hasDetails ? `
+                                            <div id="${detailsId}" class="validation-details hidden mt-3 space-y-3 transition-all duration-300">
+                                                ${hasIssues ? `
+                                                    <div>
+                                                        <div class="text-xs font-semibold text-red-700 uppercase mb-2 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            Issues (${val.issues.length})
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            ${val.issues.map(issue => `
+                                                                <div class="bg-red-50 border-l-4 border-red-400 p-3 rounded text-sm">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                        </svg>
+                                                                        <div class="flex-1">
+                                                                            <div class="text-red-800 font-medium">${issue}</div>
+                                                                            <div class="text-red-600 text-xs mt-1">${getFixSuggestion(issue)}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                                ${hasWarnings ? `
+                                                    <div>
+                                                        <div class="text-xs font-semibold text-orange-700 uppercase mb-2 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            Warnings (${val.warnings.length})
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            ${val.warnings.map(warning => `
+                                                                <div class="bg-orange-50 border-l-4 border-orange-400 p-3 rounded text-sm">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                        </svg>
+                                                                        <div class="flex-1">
+                                                                            <div class="text-orange-800 font-medium">${warning}</div>
+                                                                            <div class="text-orange-600 text-xs mt-1">${getFixSuggestion(warning)}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }
+                            
+                            validationHtml += `
+                                    </div>
+                                    ${overallScore < 0.7 ? `
+                                        <div class="mt-6 text-center">
+                                            <button id="regenerateBtn" onclick="regenerateWithFixes()" 
+                                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                                style="color: #ffffff !important;">
+                                                <span style="color: #ffffff !important;">🔄 Regenerate with Fixes</span>
+                                            </button>
+                                            <p class="text-xs text-gray-600 mt-2">The system will apply suggested fixes to improve the score</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }
+                        
+                        // Get industry context if available
+                        const industry = result.data.principles.industry_context?.industry || 'detected from description';
+                        const industryContext = result.data.principles.industry_context;
+                        const primaryColor = result.data.tokens.colors?.find(c => c.role === 'primary' && (c.name.includes('500') || c.name.includes('450')))?.value || '#3b82f6';
+                        const primaryName = result.data.tokens.colors?.find(c => c.role === 'primary' && (c.name.includes('500') || c.name.includes('450')))?.name || 'primary-500';
+                        
+                        // Build Hero Card
+                        const heroCard = `
+                            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200 p-6 shadow-md mb-6">
+                                <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                                    <div class="flex items-center gap-4 flex-1">
+                                        <div class="w-16 h-16 rounded-xl border-2 border-gray-300 shadow-lg flex-shrink-0" style="background-color: ${primaryColor}"></div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-3 mb-2">
+                                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Industry</span>
+                                                <span class="text-sm bg-indigo-600 text-white px-3 py-1 rounded-full font-bold">${industry}</span>
+                                            </div>
+                                            <div class="text-lg font-bold text-gray-800 mb-1">${result.data.principles.philosophy}</div>
+                                            <div class="text-sm text-gray-600">${result.data.principles.density} density</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Primary Color</div>
+                                        <div class="font-mono text-sm font-bold text-gray-800">${primaryName}</div>
+                                        <div class="font-mono text-xs text-gray-600">${primaryColor}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Build Metrics Grid
+                        const metricsGrid = `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-5 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Philosophy</div>
+                                    </div>
+                                    <div class="text-xl font-bold text-gray-800">${result.data.principles.philosophy}</div>
+                                </div>
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-5 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                        </svg>
+                                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Density</div>
+                                    </div>
+                                    <div class="text-xl font-bold text-gray-800">${result.data.principles.density}</div>
+                                </div>
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-5 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                        </svg>
+                                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Warmth</div>
+                                    </div>
+                                    <div class="flex items-baseline gap-2">
+                                        <div class="text-2xl font-bold text-gray-800">${result.data.principles.warmth}</div>
+                                        <div class="text-sm text-gray-500">/10</div>
+                                        <div class="flex-1 h-2 bg-gray-200 rounded-full ml-2">
+                                            <div class="h-2 bg-indigo-600 rounded-full" style="width: ${(result.data.principles.warmth / 10) * 100}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-5 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Clarity</div>
+                                    </div>
+                                    <div class="flex items-baseline gap-2">
+                                        <div class="text-2xl font-bold text-gray-800">${result.data.principles.clarity}</div>
+                                        <div class="text-sm text-gray-500">/10</div>
+                                        <div class="flex-1 h-2 bg-gray-200 rounded-full ml-2">
+                                            <div class="h-2 bg-green-600 rounded-full" style="width: ${(result.data.principles.clarity / 10) * 100}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Build AI Inferences as Badges
+                        const aiInferences = `
+                            <div class="bg-white rounded-lg border-2 border-gray-200 p-5 shadow-sm mb-6">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                    </svg>
+                                    <div class="text-sm font-bold text-gray-800 uppercase tracking-wide">AI Inferences</div>
+                                </div>
+                                <div class="flex flex-wrap gap-3">
+                                    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-blue-900">Users:</span>
+                                        <span class="text-sm text-blue-700">${result.data.principles.inferred_users?.join(', ') || 'Standard'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-lg px-4 py-2">
+                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-purple-900">Traits:</span>
+                                        <span class="text-sm text-purple-700">${result.data.principles.inferred_traits?.join(', ') || 'Modern'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-green-900">Platforms:</span>
+                                        <span class="text-sm text-green-700">${result.data.principles.inferred_platforms?.join(', ') || 'Web'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Build Stats Footer
+                        const statsFooter = `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t-2 border-gray-200">
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-4 shadow-sm text-center">
+                                    <svg class="w-6 h-6 text-indigo-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                    </svg>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Design Tokens</div>
+                                    <div class="text-lg font-bold text-gray-800">${result.data.tokens.colors.length} colors</div>
+                                    <div class="text-sm text-gray-600">${result.data.tokens.typography.length} typography • ${result.data.tokens.spacing.length} spacing</div>
+                                </div>
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-4 shadow-sm text-center">
+                                    <svg class="w-6 h-6 text-indigo-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                    </svg>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Components</div>
+                                    <div class="text-2xl font-bold text-gray-800">${result.data.component_library.components.length}</div>
+                                    <div class="text-sm text-gray-600">React components</div>
+                                </div>
+                                <div class="bg-white rounded-lg border-2 border-gray-200 p-4 shadow-sm text-center">
+                                    <svg class="w-6 h-6 text-indigo-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Generated</div>
+                                    <div class="text-sm font-bold text-gray-800">${new Date(result.data.generated_at).toLocaleDateString()}</div>
+                                    <div class="text-xs text-gray-600">${new Date(result.data.generated_at).toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        resultsContent.innerHTML = `
+                            ${heroCard}
+                            ${metricsGrid}
+                            ${aiInferences}
+                            ${reasoningHtml}
+                            ${validationHtml}
+                            ${statsFooter}
+                        `;
+                        results.classList.remove('hidden');
+                        
+                        // Update preview with full token visualization
+                        if (typeof updatePreview === 'function') {
+                            updatePreview();
+                        }
+                    } else {
+                        throw new Error(result.message);
+                    }
+
+                } catch (error) {
+                    alert('Error generating design system: ' + error.message);
+                } finally {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '🚀 Generate Design System';
+                    loadingState.classList.add('hidden');
+
+                    if (generatedData) {
+                        updatePreview();
+                    }
+                }
+            });
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeToggleHandle = document.getElementById('themeToggleHandle');
+            const previewPane = document.getElementById('previewPane');
+            let currentTheme = 'light';
+
+            themeToggle.addEventListener('click', () => {
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+                if (currentTheme === 'dark') {
+                    themeToggle.classList.replace('bg-gray-200', 'bg-indigo-600');
+                    themeToggleHandle.classList.replace('translate-x-0', 'translate-x-5');
+                    previewPane.setAttribute('data-theme', 'dark');
+                    themeToggle.setAttribute('aria-checked', 'true');
+                } else {
+                    themeToggle.classList.replace('bg-indigo-600', 'bg-gray-200');
+                    themeToggleHandle.classList.replace('translate-x-5', 'translate-x-0');
+                    previewPane.removeAttribute('data-theme');
+                    themeToggle.setAttribute('aria-checked', 'false');
+                }
+                updatePreview();
+            });
+
+            // Store previous design system for comparison
+            let previousDesignSystem = null;
+
+            function updatePreview() {
+                if (!generatedData) return;
+
+                const colors = generatedData.tokens.colors || [];
+                const typography = generatedData.tokens.typography || [];
+                const spacing = generatedData.tokens.spacing || [];
+
+                const bg = currentTheme === 'light' ? '#ffffff' : '#1a202c';
+                const text = currentTheme === 'light' ? '#1a202c' : '#f7fafc';
+                const border = currentTheme === 'light' ? '#e2e8f0' : '#4a5568';
+
+                previewPane.style.backgroundColor = bg;
+                previewPane.style.color = text;
+
+                // Update comparison badge
+                const comparisonBadge = document.getElementById('comparisonBadge');
+                if (comparisonBadge && previousDesignSystem) {
+                    const prevPrimary = previousDesignSystem.tokens?.colors?.find(c => 
+                        c.role === 'primary' && (c.name.includes('500') || c.name.includes('450'))
+                    )?.value;
+                    const currPrimary = colors.find(c => 
+                        c.role === 'primary' && (c.name.includes('500') || c.name.includes('450'))
+                    )?.value;
+                    
+                    if (prevPrimary && currPrimary && prevPrimary !== currPrimary) {
+                        comparisonBadge.classList.remove('hidden');
+                        comparisonBadge.textContent = `Primary: ${prevPrimary} → ${currPrimary}`;
+                    } else {
+                        comparisonBadge.classList.add('hidden');
+                    }
+                } else if (comparisonBadge) {
+                    comparisonBadge.classList.add('hidden');
+                }
+
+                // Store current system for next comparison
+                previousDesignSystem = JSON.parse(JSON.stringify(generatedData));
+
+                // System Summary
+                const summaryContent = document.getElementById('summaryContent');
+                if (summaryContent) {
+                    const primaryColor = colors.find(c => c.role === 'primary' && (c.name.includes('500') || c.name.includes('450')))?.value || '#3b82f6';
+                    const primaryName = colors.find(c => c.role === 'primary' && (c.name.includes('500') || c.name.includes('450')))?.name || 'primary-500';
+                    
+                    summaryContent.innerHTML = `
+                        <div class="flex items-center gap-4 p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm mb-4">
+                            <div class="w-12 h-12 rounded-lg border-2 border-gray-300 shadow-md" style="background-color: ${primaryColor}"></div>
+                            <div>
+                                <div class="font-bold text-gray-800 text-base">${primaryName}</div>
+                                <div class="text-gray-500 font-mono text-sm">${primaryColor}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Philosophy</div>
+                                <div class="font-bold text-gray-800 text-base">${generatedData.principles.philosophy}</div>
+                            </div>
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Density</div>
+                                <div class="font-bold text-gray-800 text-base">${generatedData.principles.density}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Warmth</div>
+                                <div class="font-bold text-gray-800 text-base">${generatedData.principles.warmth}/10</div>
+                            </div>
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Clarity</div>
+                                <div class="font-bold text-gray-800 text-base">${generatedData.principles.clarity}/10</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                            <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Token Count</div>
+                            <div class="font-bold text-gray-800 text-sm">${colors.length} colors • ${typography.length} typography • ${spacing.length} spacing</div>
+                        </div>
+                    `;
+                }
+
+                // Primary Color Scale
+                const primaryScale = document.getElementById('primaryScale');
+                primaryScale.innerHTML = '';
+                const primaryColors = colors.filter(c => c.role === 'primary').sort((a, b) => {
+                    const aNum = parseInt(a.name.split('-')[1]) || 0;
+                    const bNum = parseInt(b.name.split('-')[1]) || 0;
+                    return aNum - bNum;
+                });
+                primaryColors.forEach((color, index) => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'flex-1 h-full relative group cursor-pointer color-swatch transition-transform hover:scale-105';
+                    swatch.style.backgroundColor = color.value;
+                    swatch.title = `${color.name}: ${color.value}`;
+                    
+                    // Show hex value on hover
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20';
+                    tooltip.textContent = `${color.name}\n${color.value}`;
+                    tooltip.style.whiteSpace = 'pre-line';
+                    tooltip.style.textAlign = 'center';
+                    swatch.appendChild(tooltip);
+                    
+                    // Add label for 500 weight
+                    if (color.name.includes('-500')) {
+                        const label = document.createElement('div');
+                        label.className = 'absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] font-bold';
+                        label.style.color = getContrastColor(color.value);
+                        label.textContent = '500';
+                        label.style.textShadow = '0 1px 2px rgba(0,0,0,0.3)';
+                        swatch.appendChild(label);
+                    }
+                    
+                    primaryScale.appendChild(swatch);
+                });
+
+                // Neutral Color Scale
+                const neutralScale = document.getElementById('neutralScale');
+                neutralScale.innerHTML = '';
+                const neutralColors = colors.filter(c => c.role === 'neutral').sort((a, b) => {
+                    const aNum = parseInt(a.name.split('-')[1]) || 0;
+                    const bNum = parseInt(b.name.split('-')[1]) || 0;
+                    return aNum - bNum;
+                });
+                neutralColors.forEach((color, index) => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'flex-1 h-full border-2 border-gray-300 relative group cursor-pointer color-swatch transition-transform hover:scale-105';
+                    swatch.style.backgroundColor = color.value;
+                    swatch.title = `${color.name}: ${color.value}`;
+                    
+                    // Show hex value on hover
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20';
+                    tooltip.textContent = `${color.name}\n${color.value}`;
+                    tooltip.style.whiteSpace = 'pre-line';
+                    tooltip.style.textAlign = 'center';
+                    swatch.appendChild(tooltip);
+                    
+                    neutralScale.appendChild(swatch);
+                });
+
+                // Semantic Colors
+                const semanticContainer = document.getElementById('semanticColors');
+                semanticContainer.innerHTML = '';
+                const semanticColors = colors.filter(c => c.role === 'semantic');
+                semanticColors.forEach(color => {
+                    const card = document.createElement('div');
+                    card.className = 'rounded-lg p-4 text-center shadow-md transition-transform hover:scale-105 cursor-pointer';
+                    card.style.backgroundColor = color.value;
+                    card.style.color = getContrastColor(color.value);
+                    
+                    const name = document.createElement('div');
+                    name.className = 'text-sm font-bold uppercase mb-2';
+                    name.textContent = color.name.split('-')[0];
+                    
+                    const value = document.createElement('div');
+                    value.className = 'text-xs font-mono opacity-90';
+                    value.textContent = color.value;
+                    
+                    card.appendChild(name);
+                    card.appendChild(value);
+                    card.title = `${color.name}: ${color.value}`;
+                    semanticContainer.appendChild(card);
+                });
+
+                // Typography Preview
+                const typoPreview = document.getElementById('typographyPreview');
+                typoPreview.innerHTML = '';
+                const headingTypes = typography.filter(t => t.role === 'heading').slice(0, 3);
+                const bodyTypes = typography.filter(t => t.role === 'body').slice(0, 2);
+                
+                headingTypes.forEach(typo => {
+                    const container = document.createElement('div');
+                    container.className = 'mb-4 pb-3 border-b border-gray-200';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'text-xs text-gray-500 mb-2 font-mono';
+                    label.textContent = typo.name;
+                    
+                    const sample = document.createElement('div');
+                    sample.style.fontSize = typo.size;
+                    sample.style.fontWeight = typo.weight;
+                    sample.style.lineHeight = typo.line_height;
+                    sample.style.fontFamily = typo.family;
+                    sample.style.color = text;
+                    sample.textContent = 'The quick brown fox jumps over the lazy dog';
+                    sample.className = 'mb-1';
+                    
+                    container.appendChild(label);
+                    container.appendChild(sample);
+                    typoPreview.appendChild(container);
+                });
+
+                bodyTypes.forEach(typo => {
+                    const container = document.createElement('div');
+                    container.className = 'mb-4 pb-3 border-b border-gray-200';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'text-xs text-gray-500 mb-2 font-mono';
+                    label.textContent = typo.name;
+                    
+                    const sample = document.createElement('div');
+                    sample.style.fontSize = typo.size;
+                    sample.style.fontWeight = typo.weight;
+                    sample.style.lineHeight = typo.line_height;
+                    sample.style.fontFamily = typo.family;
+                    sample.style.color = text;
+                    sample.textContent = 'Body text sample demonstrating readability and line height. This shows how the typography system works in practice.';
+                    sample.className = 'opacity-90';
+                    
+                    container.appendChild(label);
+                    container.appendChild(sample);
+                    typoPreview.appendChild(container);
+                });
+
+                // Spacing Scale
+                const spacingPreview = document.getElementById('spacingPreview');
+                spacingPreview.innerHTML = '';
+                const spacingSamples = spacing.slice(0, 8);
+                spacingSamples.forEach(space => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-4 py-2';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'text-sm font-mono text-gray-600 w-24';
+                    label.textContent = space.name;
+                    
+                    const visual = document.createElement('div');
+                    visual.className = 'h-6 rounded-lg shadow-sm flex items-center justify-end pr-2';
+                    visual.style.width = space.value;
+                    visual.style.backgroundColor = currentTheme === 'light' ? '#6366f1' : '#818cf8';
+                    visual.style.minWidth = '40px';
+                    
+                    const value = document.createElement('div');
+                    value.className = 'text-sm font-mono text-gray-500';
+                    value.textContent = space.value;
+                    
+                    row.appendChild(label);
+                    row.appendChild(visual);
+                    row.appendChild(value);
+                    spacingPreview.appendChild(row);
+                });
+
+                // Component Preview
+                const componentPreview = document.getElementById('componentPreview');
+                componentPreview.innerHTML = '';
+                
+                const primary = colors.find(c => c.name.includes('primary-500') || c.name.includes('primary-450'))?.value || '#3b82f6';
+                const neutral = colors.find(c => c.name.includes('neutral-100') || c.name.includes('neutral-50'))?.value || '#f3f4f6';
+                const error = colors.find(c => c.name.includes('error-500'))?.value || '#ef4444';
+                const success = colors.find(c => c.name.includes('success-500'))?.value || '#10b981';
+
+                // Helper function for contrast
+                function getContrastColor(hex) {
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                    return brightness > 128 ? '#000000' : '#ffffff';
+                }
+
+                // Button samples
+                const buttonSection = document.createElement('div');
+                buttonSection.className = 'mb-6';
+                const buttonLabel = document.createElement('div');
+                buttonLabel.className = 'text-sm font-semibold text-gray-700 mb-3';
+                buttonLabel.textContent = 'Buttons';
+                buttonSection.appendChild(buttonLabel);
+                
+                const buttonRow = document.createElement('div');
+                buttonRow.className = 'flex gap-3 flex-wrap';
+                ['primary', 'secondary', 'danger'].forEach(variant => {
+                    const btn = document.createElement('button');
+                    btn.className = 'px-6 py-3 rounded-lg text-sm font-semibold transition-all hover:scale-105 shadow-md';
+                    if (variant === 'primary') {
+                        btn.style.backgroundColor = primary;
+                        btn.style.color = 'white';
+                    } else if (variant === 'secondary') {
+                        btn.style.backgroundColor = neutral;
+                        btn.style.color = text;
+                        btn.style.border = `2px solid ${border}`;
+                    } else {
+                        btn.style.backgroundColor = error;
+                        btn.style.color = 'white';
+                    }
+                    btn.textContent = variant.charAt(0).toUpperCase() + variant.slice(1) + ' Button';
+                    buttonRow.appendChild(btn);
+                });
+                buttonSection.appendChild(buttonRow);
+                componentPreview.appendChild(buttonSection);
+
+                // Alert samples
+                const alertSection = document.createElement('div');
+                const alertLabel = document.createElement('div');
+                alertLabel.className = 'text-sm font-semibold text-gray-700 mb-3';
+                alertLabel.textContent = 'Alerts';
+                alertSection.appendChild(alertLabel);
+                
+                const alertRow = document.createElement('div');
+                alertRow.className = 'space-y-3';
+                ['success', 'error'].forEach(variant => {
+                    const alert = document.createElement('div');
+                    alert.className = 'p-4 rounded-lg text-sm shadow-sm border-l-4';
+                    alert.style.backgroundColor = variant === 'success' ? success + '15' : error + '15';
+                    alert.style.borderLeftColor = variant === 'success' ? success : error;
+                    alert.style.color = variant === 'success' ? success : error;
+                    alert.innerHTML = `<strong>${variant.charAt(0).toUpperCase() + variant.slice(1)}:</strong> This is a sample alert message demonstrating the ${variant} variant.`;
+                    alertRow.appendChild(alert);
+                });
+                alertSection.appendChild(alertRow);
+                componentPreview.appendChild(alertSection);
+
+                // Update gallery highlights
+                ['galHeaderBtn', 'galHeroBtn'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.backgroundColor = primary;
+                        el.style.opacity = '0.8';
+                    }
+                });
+
+                ['galHeader', 'galHero', 'galSidebar'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.borderColor = border;
+                });
+            }
+
+            downloadBtn.addEventListener('click', () => {
+                if (generatedData) {
+                    const blob = new Blob([JSON.stringify(generatedData, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `design-system-${Date.now()}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            });
+
+            downloadComponentsBtn.addEventListener('click', () => {
+                if (generatedData && generatedData.component_library) {
+                    const zip = new JSZip();
+
+                    // Add CSS variables
+                    zip.file('src/styles/variables.css', generatedData.component_library.css_variables);
+
+                    // Add Tailwind config
+                    zip.file('tailwind.config.js', generatedData.component_library.tailwind_config);
+
+                    // Add package.json
+                    zip.file('package.json', generatedData.component_library.package_json);
+
+                    // Add Figma Tokens
+                    zip.file('figma-tokens.json', generatedData.component_library.figma_tokens);
+
+                    // Add component index
+                    zip.file('src/index.ts', generatedData.component_library.index_file);
+
+                    // Add individual components
+                    generatedData.component_library.components.forEach(component => {
+                        zip.file(component.file_path, component.code);
+                    });
+
+                    // Add Storybook stories
+                    if (generatedData.component_library.storybook_files) {
+                        generatedData.component_library.storybook_files.forEach(story => {
+                            zip.file(story.file_path, story.content);
+                        });
+                    }
+
+                    // Add Test files
+                    if (generatedData.component_library.test_files) {
+                        generatedData.component_library.test_files.forEach(test => {
+                            zip.file(test.file_path, test.content);
+                        });
+                    }
+
+                    // Add configuration files if they exist
+                    if (generatedData.component_library.storybook_config) {
+                        zip.file('.storybook/main.ts', generatedData.component_library.storybook_config.main_ts);
+                        zip.file('.storybook/preview.ts', generatedData.component_library.storybook_config.preview_ts);
+                    }
+
+                    if (generatedData.component_library.jest_config) {
+                        zip.file('jest.config.js', generatedData.component_library.jest_config);
+                        zip.file('src/setupTests.ts', generatedData.component_library.setup_tests);
+                    }
+
+                    // Add README
+                    const readme = `# Design System Components
+
+This is an auto-generated React component library based on your design system.
+
+## Installation
+
+\`\`\`bash
+npm install
+\`\`\`
+
+## Development
+
+\`\`\`bash
+npm run dev
+\`\`\`
+
+## Build
+
+\`\`\`bash
+npm run build
+\`\`\`
+
+## Components
+
+${generatedData.component_library.components.map(c => `- ${c.name}`).join('\\n')}
+
+## Design Philosophy
+
+- **Philosophy**: ${generatedData.principles.philosophy}
+- **Density**: ${generatedData.principles.density}
+- **Clarity**: ${generatedData.principles.clarity}/10
+- **Warmth**: ${generatedData.principles.warmth}/10
+`;
+                    zip.file('README.md', readme);
+
+                    zip.generateAsync({ type: 'blob' }).then(function (content) {
+                        const url = URL.createObjectURL(content);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `components-${Date.now()}.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
+                }
+            });
+        </script>
+</body>
+
+</html>
