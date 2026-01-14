@@ -33,7 +33,7 @@ class VisualIdentityAgent:
         else:
             self.model = "gemini/gemini-1.5-pro-latest"  # fallback default
 
-    def generate_color_system(self, principles: DesignPrinciples, product_idea: str = "") -> Tuple[list[ColorToken], Optional[ColorRationale], Optional[List[Dict[str, Any]]]]:
+    def generate_color_system(self, principles: DesignPrinciples, product_idea: str = "") -> Tuple[List[ColorToken], Optional[ColorRationale], Optional[List[Dict[str, Any]]]]:
         """Generate a complete color system based on design principles with industry context."""
         industry = principles.industry_context.industry if principles.industry_context else "unknown"
         industry_colors = KnowledgeBase.get_industry_color_suggestions(industry)
