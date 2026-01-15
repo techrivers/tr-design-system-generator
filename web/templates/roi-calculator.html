@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator - Technology Rivers</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="/" class="text-indigo-600 hover:underline mb-4 inline-block">← Back to Generator</a>
+            <h1 class="text-3xl font-bold text-gray-900">ROI Calculator</h1>
+            <p class="text-gray-600 mt-2">Calculate time and cost savings with our design system generator</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Project Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Team Size</label>
+                            <input type="number" id="teamSize" value="5" min="1" max="50"
+                                   class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Average Developer Hourly Rate ($)</label>
+                            <input type="number" id="devRate" value="100" min="50" max="300"
+                                   class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Average Designer Hourly Rate ($)</label>
+                            <input type="number" id="designerRate" value="80" min="50" max="200"
+                                   class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Project Timeline (months)</label>
+                            <input type="number" id="timeline" value="6" min="1" max="24"
+                                   class="w-full px-3 py-2 border rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Time Estimates</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Design System Creation (hours)</label>
+                            <input type="number" id="dsCreation" value="80" min="0"
+                                   class="w-full px-3 py-2 border rounded">
+                            <p class="text-xs text-gray-500 mt-1">Traditional: 80-120 hours</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Component Development (hours)</label>
+                            <input type="number" id="componentDev" value="200" min="0"
+                                   class="w-full px-3 py-2 border rounded">
+                            <p class="text-xs text-gray-500 mt-1">Traditional: 200-300 hours</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Documentation (hours)</label>
+                            <input type="number" id="documentation" value="40" min="0"
+                                   class="w-full px-3 py-2 border rounded">
+                            <p class="text-xs text-gray-500 mt-1">Traditional: 40-60 hours</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="space-y-6">
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg shadow p-6 border-2 border-indigo-200">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-900">Savings Summary</h2>
+                    <div id="savingsSummary" class="space-y-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Cost Comparison</h2>
+                    <canvas id="costChart"></canvas>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Time Comparison</h2>
+                    <canvas id="timeChart"></canvas>
+                </div>
+
+                <div class="bg-green-50 rounded-lg shadow p-6 border-2 border-green-200">
+                    <h2 class="text-xl font-semibold mb-4 text-green-900">ROI Breakdown</h2>
+                    <div id="roiBreakdown" class="space-y-3">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Share Results</h2>
+            <div class="flex gap-4">
+                <button id="shareBtn" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
+                    Copy Share Link
+                </button>
+                <button id="exportBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300">
+                    Export as PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let costChart = null;
+        let timeChart = null;
+
+        function calculateROI() {
+            const teamSize = parseInt(document.getElementById('teamSize').value) || 5;
+            const devRate = parseInt(document.getElementById('devRate').value) || 100;
+            const designerRate = parseInt(document.getElementById('designerRate').value) || 80;
+            const timeline = parseInt(document.getElementById('timeline').value) || 6;
+            const dsCreation = parseInt(document.getElementById('dsCreation').value) || 80;
+            const componentDev = parseInt(document.getElementById('componentDev').value) || 200;
+            const documentation = parseInt(document.getElementById('documentation').value) || 40;
+
+            // Traditional approach costs
+            const traditionalDS = dsCreation * designerRate;
+            const traditionalComponents = componentDev * devRate;
+            const traditionalDocs = documentation * (designerRate * 0.5 + devRate * 0.5);
+            const traditionalTotal = traditionalDS + traditionalComponents + traditionalDocs;
+
+            // With design system generator (90% time savings)
+            const generatedDS = (dsCreation * 0.1) * designerRate; // 10% of time
+            const generatedComponents = (componentDev * 0.2) * devRate; // 20% of time
+            const generatedDocs = (documentation * 0.1) * (designerRate * 0.5 + devRate * 0.5); // 10% of time
+            const generatedTotal = generatedDS + generatedComponents + generatedDocs;
+
+            const costSavings = traditionalTotal - generatedTotal;
+            const timeSavings = (dsCreation + componentDev + documentation) * 0.8; // 80% average savings
+            const roi = ((costSavings / generatedTotal) * 100).toFixed(0);
+
+            // Update summary
+            document.getElementById('savingsSummary').innerHTML = `
+                <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                    <div class="text-sm text-gray-600 mb-1">Total Cost Savings</div>
+                    <div class="text-3xl font-bold text-indigo-600">$${costSavings.toLocaleString()}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                    <div class="text-sm text-gray-600 mb-1">Time Saved</div>
+                    <div class="text-3xl font-bold text-indigo-600">${Math.round(timeSavings)} hours</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                    <div class="text-sm text-gray-600 mb-1">ROI</div>
+                    <div class="text-3xl font-bold text-green-600">${roi}%</div>
+                </div>
+            `;
+
+            // Update ROI breakdown
+            document.getElementById('roiBreakdown').innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-700">Traditional Approach</span>
+                    <span class="font-bold text-red-600">$${traditionalTotal.toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-700">With Design System Generator</span>
+                    <span class="font-bold text-green-600">$${generatedTotal.toLocaleString()}</span>
+                </div>
+                <div class="border-t-2 border-green-300 pt-3 mt-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-green-900">Total Savings</span>
+                        <span class="text-2xl font-bold text-green-600">$${costSavings.toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+
+            // Update charts
+            const traditionalTimeTotal = dsCreation + componentDev + documentation;
+            const generatedTimeTotal = (dsCreation * 0.1) + (componentDev * 0.2) + (documentation * 0.1);
+            updateCharts(traditionalTotal, generatedTotal, traditionalTimeTotal, generatedTimeTotal);
+        }
+
+        function updateCharts(traditionalCost, generatedCost, traditionalTime, generatedTime) {
+            // Cost comparison chart
+            const costCtx = document.getElementById('costChart').getContext('2d');
+            if (costChart) costChart.destroy();
+            costChart = new Chart(costCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Traditional', 'With Generator'],
+                    datasets: [{
+                        label: 'Cost ($)',
+                        data: [traditionalCost, generatedCost],
+                        backgroundColor: ['#ef4444', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Time comparison chart
+            const timeCtx = document.getElementById('timeChart').getContext('2d');
+            if (timeChart) timeChart.destroy();
+            timeChart = new Chart(timeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Traditional', 'With Generator'],
+                    datasets: [{
+                        label: 'Time (hours)',
+                        data: [traditionalTime, generatedTime],
+                        backgroundColor: ['#f59e0b', '#3b82f6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Add event listeners
+        ['teamSize', 'devRate', 'designerRate', 'timeline', 'dsCreation', 'componentDev', 'documentation'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateROI);
+        });
+
+        document.getElementById('shareBtn').addEventListener('click', () => {
+            const params = new URLSearchParams();
+            params.set('teamSize', document.getElementById('teamSize').value);
+            params.set('devRate', document.getElementById('devRate').value);
+            params.set('designerRate', document.getElementById('designerRate').value);
+            params.set('timeline', document.getElementById('timeline').value);
+            params.set('dsCreation', document.getElementById('dsCreation').value);
+            params.set('componentDev', document.getElementById('componentDev').value);
+            params.set('documentation', document.getElementById('documentation').value);
+            
+            const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('Share link copied to clipboard!', 'success');
+            });
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            // Simple export - could be enhanced with PDF generation
+            const results = {
+                teamSize: document.getElementById('teamSize').value,
+                savings: document.getElementById('savingsSummary').textContent,
+                timestamp: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'roi-calculator-results.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            showNotification('Results exported!', 'success');
+        });
+
+        // Load from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('teamSize')) {
+            document.getElementById('teamSize').value = urlParams.get('teamSize');
+            document.getElementById('devRate').value = urlParams.get('devRate');
+            document.getElementById('designerRate').value = urlParams.get('designerRate');
+            document.getElementById('timeline').value = urlParams.get('timeline');
+            document.getElementById('dsCreation').value = urlParams.get('dsCreation');
+            document.getElementById('componentDev').value = urlParams.get('componentDev');
+            document.getElementById('documentation').value = urlParams.get('documentation');
+        }
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initial calculation
+        calculateROI();
+    </script>
+</body>
+</html>

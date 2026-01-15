@@ -17,7 +17,17 @@ class DesignStrategistAgent:
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-        self.model = os.getenv("MODEL_NAME", "gemini/gemini-1.5-pro-latest")
+        # Auto-detect model based on API key if MODEL_NAME not explicitly set
+        if os.getenv("MODEL_NAME"):
+            self.model = os.getenv("MODEL_NAME")
+        elif os.getenv("GEMINI_API_KEY"):
+            self.model = "gemini/gemini-1.5-pro-latest"
+        elif os.getenv("OPENAI_API_KEY"):
+            self.model = "gpt-5"  # Best for complex reasoning and structured JSON output
+        elif os.getenv("ANTHROPIC_API_KEY"):
+            self.model = "claude-3-5-sonnet-20241022"
+        else:
+            self.model = "gemini/gemini-1.5-pro-latest"  # fallback default
 
     def analyze_product_requirements(self, input_data: DesignSystemInput) -> DesignPrinciples:
         """

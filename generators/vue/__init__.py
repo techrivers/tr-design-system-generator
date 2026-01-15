@@ -1,0 +1,1 @@
+"""Vue.js component generator."""

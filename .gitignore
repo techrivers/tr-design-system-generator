@@ -21,6 +21,11 @@ generated/
 .env.local
 .env.*.local
 
+# Google Cloud service account keys
+key.json
+*.json
+!package.json
+
 # IDE
 .vscode/
 .idea/

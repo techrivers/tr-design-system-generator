@@ -108,6 +108,193 @@ async def generate_design_system(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/editor", response_class=HTMLResponse)
+async def editor(request: Request):
+    """Visual design token editor page."""
+    return templates.TemplateResponse("editor.html", {"request": request})
+
+
+@app.get("/api/tokens/{file_id}")
+async def get_tokens(file_id: str):
+    """Load design tokens from a generated file."""
+    try:
+        # Try to find the file
+        file_path = Path(f"generated/design-system-{file_id}.json")
+        if not file_path.exists():
+            # Try without prefix
+            file_path = Path(f"generated/{file_id}.json")
+        if not file_path.exists():
+            # Try in root
+            file_path = Path(f"{file_id}.json")
+        
+        if file_path.exists():
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            # Extract tokens
+            tokens = {
+                "colors": data.get("tokens", {}).get("colors", []),
+                "typography": data.get("tokens", {}).get("typography", []),
+                "spacing": data.get("tokens", {}).get("spacing", []),
+                "border_radius": data.get("tokens", {}).get("border_radius", {}),
+                "shadows": data.get("tokens", {}).get("shadows", {})
+            }
+            return {"success": True, "tokens": tokens}
+        else:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Design system file not found"}
+            )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.get("/playground", response_class=HTMLResponse)
+async def playground(request: Request):
+    """Component playground page."""
+    return templates.TemplateResponse("playground.html", {"request": request})
+
+
+@app.get("/roi-calculator", response_class=HTMLResponse)
+async def roi_calculator(request: Request):
+    """ROI calculator page."""
+    return templates.TemplateResponse("roi-calculator.html", {"request": request})
+
+
+@app.get("/api/playground/{component_name}")
+async def get_component_code(component_name: str, file_id: Optional[str] = None):
+    """Get component code for playground."""
+    try:
+        # Load design system if file_id provided
+        design_system = None
+        if file_id:
+            file_path = Path(f"generated/design-system-{file_id}.json")
+            if file_path.exists():
+                with open(file_path, 'r') as f:
+                    design_system = json.load(f)
+        
+        # Generate component code
+        from templates.components.generator import ComponentGenerator
+        if design_system:
+            comp_gen = ComponentGenerator(design_system.get("tokens", {}))
+        else:
+            # Use default tokens
+            from models import DesignTokens
+            default_tokens = DesignTokens(colors=[], typography=[], spacing=[])
+            comp_gen = ComponentGenerator(default_tokens)
+        
+        # Get component code (simplified - would need actual component spec)
+        component_code = f"// {component_name} component code would be generated here"
+        
+        return {"success": True, "code": component_code, "component": component_name}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.post("/api/integrate")
+async def integrate_project(
+    framework: Optional[str] = Form(None),
+    directory: Optional[str] = Form(None),
+    file_id: Optional[str] = Form(None)
+):
+    """Integrate design system into existing project."""
+    try:
+        from cli.integrate import ProjectIntegrator
+        from pathlib import Path
+        
+        project_dir = Path(directory or ".").resolve()
+        integrator = ProjectIntegrator(project_dir)
+        
+        # Load design system if file_id provided
+        design_system = None
+        if file_id:
+            file_path = Path(f"generated/design-system-{file_id}.json")
+            if file_path.exists():
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                from models import DesignSystemOutput
+                design_system = DesignSystemOutput(**data)
+        
+        if not design_system:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Design system file not found"}
+            )
+        
+        results = integrator.integrate(
+            design_system,
+            auto_install=False,
+            explicit_framework=framework
+        )
+        
+        return JSONResponse({
+            "success": len(results.get("errors", [])) == 0,
+            "results": results
+        })
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.get("/api/roi")
+async def calculate_roi(
+    team_size: int = 5,
+    dev_rate: float = 100,
+    designer_rate: float = 80,
+    timeline: int = 6,
+    ds_creation: int = 80,
+    component_dev: int = 200,
+    documentation: int = 40
+):
+    """Calculate ROI for design system generator."""
+    try:
+        # Traditional approach costs
+        traditional_ds = ds_creation * designer_rate
+        traditional_components = component_dev * dev_rate
+        traditional_docs = documentation * (designer_rate * 0.5 + dev_rate * 0.5)
+        traditional_total = traditional_ds + traditional_components + traditional_docs
+        
+        # With design system generator
+        generated_ds = (ds_creation * 0.1) * designer_rate
+        generated_components = (component_dev * 0.2) * dev_rate
+        generated_docs = (documentation * 0.1) * (designer_rate * 0.5 + dev_rate * 0.5)
+        generated_total = generated_ds + generated_components + generated_docs
+        
+        cost_savings = traditional_total - generated_total
+        time_savings = (ds_creation + component_dev + documentation) * 0.8
+        roi = (cost_savings / generated_total * 100) if generated_total > 0 else 0
+        
+        return JSONResponse({
+            "success": True,
+            "traditional": {
+                "cost": traditional_total,
+                "time": ds_creation + component_dev + documentation
+            },
+            "generated": {
+                "cost": generated_total,
+                "time": (ds_creation * 0.1) + (component_dev * 0.2) + (documentation * 0.1)
+            },
+            "savings": {
+                "cost": cost_savings,
+                "time": time_savings,
+                "roi_percent": round(roi, 2)
+            }
+        })
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""

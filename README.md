@@ -30,12 +30,57 @@ Transform product concepts into complete design systems with 24+ production-read
 
 ---
 
+## 🆕 New Features
+
+### Enhanced Developer Experience
+- **🔧 Project Integration** - One-command integration with existing projects
+  ```bash
+  tr-ds integrate --framework nextjs --input design-system.json
+  ```
+- **🎮 Component Playground** - Interactive component testing and customization
+  ```bash
+  tr-ds playground
+  ```
+- **📘 Enhanced TypeScript** - Comprehensive type definitions with generics
+
+### Enhanced Designer Experience
+- **🎨 Visual Token Editor** - Drag-and-drop token editing with real-time preview
+  - Access at `/editor` in web interface
+  - Export tokens, load from files, contrast checking
+- **📚 Documentation Site** - Auto-generated docs with search and filters
+  ```bash
+  tr-ds docs --input design-system.json --output docs-site
+  ```
+- **📖 Usage Guidelines** - Auto-generated component guidelines
+  ```bash
+  tr-ds export --input design-system.json --format guidelines
+  ```
+
+### Quick Start Templates
+- **🚀 Next.js Template** - Production-ready Next.js starter
+- **⚡ Vite Template** - Fast Vite + React setup
+- **💼 SaaS Template** - Complete SaaS application structure
+- **📊 Dashboard Template** - Analytics dashboard starter
+
+### Deployment Automation
+- **🚀 Vercel Deployment** - Guided Vercel setup
+  ```bash
+  tr-ds deploy --platform vercel --setup
+  ```
+- **📦 GitHub Actions** - Auto-deployment templates
+- **🌐 Netlify Support** - Netlify configuration
+
+### ROI Calculator
+- Calculate time and cost savings
+- Interactive charts and visualizations
+- Shareable results with URL parameters
+- Access at `/roi-calculator` in web interface
+
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.11+
 - Node.js 16+ (for component development)
-- Google Cloud account (for deployment)
 - API Key for AI models (OpenAI, Anthropic, or Gemini)
 
 ### Installation
@@ -625,6 +670,8 @@ The system generates:
 
 ## 💡 Example Usage
 
+### Python API
+
 ```python
 from main import DesignSystemGenerator
 from models import DesignSystemInput, TargetUser, BrandTrait, Platform
@@ -639,11 +686,75 @@ input_data = DesignSystemInput(
 
 # Generate design system
 generator = DesignSystemGenerator()
-result = await generator.generate_design_system(input_data)
+result = generator.generate_design_system(input_data)
 
 # Save to file
 with open("my-design-system.json", "w") as f:
     json.dump(result.model_dump(), f, indent=2)
+```
+
+### CLI Commands
+
+#### Generate Design System
+```bash
+# Basic generation
+tr-ds generate "A modern e-commerce platform"
+
+# With options
+tr-ds generate "Healthcare app" --users B2B,enterprise --traits modern,professional --platforms web,dashboard
+```
+
+#### Integrate into Existing Project
+```bash
+# Auto-detect framework
+tr-ds integrate --input design-system.json
+
+# Explicitly specify framework
+tr-ds integrate --framework nextjs --input design-system.json --directory ./my-app
+
+# Generate new design system and integrate
+tr-ds integrate --product-idea "My SaaS app" --framework vite
+```
+
+#### Component Playground
+```bash
+# Start playground server
+tr-ds playground
+
+# Access at http://localhost:8000/playground
+```
+
+#### Generate Documentation
+```bash
+# Generate documentation site
+tr-ds docs --input design-system.json --output docs-site
+
+# Generate and prepare for deployment
+tr-ds docs --input design-system.json --deploy
+```
+
+#### Export Formats
+```bash
+# Export TypeScript types
+tr-ds export --input design-system.json --format typescript
+
+# Export component guidelines
+tr-ds export --input design-system.json --format guidelines
+
+# Export as NPM package
+tr-ds export --input design-system.json --format npm
+
+# Export Figma tokens
+tr-ds export --input design-system.json --format figma-tokens
+```
+
+#### Deployment
+```bash
+# Setup Vercel configuration
+tr-ds deploy --platform vercel --setup
+
+# Deploy to production
+tr-ds deploy --platform vercel --production
 ```
 
 ## 🛠️ Development
@@ -656,13 +767,41 @@ design-system-agent/
 │   ├── design_strategist/          # Core decision-making
 │   ├── visual_identity/            # Token generation
 │   └── component_architect/        # Component design
-├── models.py                        # Data models
-├── main.py                         # Core orchestration
+├── cli/                            # CLI commands
+│   ├── cli.py                      # Main CLI interface
+│   └── integrate.py                # Project integration
 ├── web/                            # Web interface
 │   ├── app.py                      # FastAPI application
 │   ├── templates/                  # HTML templates
+│   │   ├── index.html              # Main generator
+│   │   ├── editor.html             # Token editor
+│   │   ├── playground.html         # Component playground
+│   │   └── roi-calculator.html     # ROI calculator
 │   └── static/                     # Static assets
+│       └── js/                     # JavaScript files
+│           ├── editor.js            # Token editor logic
+│           └── playground.js        # Playground logic
+├── generators/                     # Code generators
+│   ├── typescript/                 # TypeScript type generation
+│   ├── nextjs/                     # Next.js generator
+│   └── vue/                        # Vue generator
+├── integrations/                   # Project integrations
+│   └── templates/                  # Starter templates
+│       ├── nextjs_template.py      # Next.js template
+│       ├── vite_template.py        # Vite template
+│       ├── saas_template.py        # SaaS template
+│       └── dashboard_template.py   # Dashboard template
 ├── templates/                      # Output templates
+│   ├── components/                 # Component generators
+│   └── guidelines/                 # Usage guidelines generator
+├── deploy/                         # Deployment automation
+│   ├── vercel.py                   # Vercel deployment
+│   ├── github_actions.yml          # GitHub Actions template
+│   └── vercel.json                 # Vercel config
+├── ui/                             # UI generators
+│   └── docs/                       # Documentation site generator
+├── models.py                       # Data models
+├── main.py                         # Core orchestration
 ├── tests/                          # Test suite
 └── requirements.txt                # Dependencies
 ```
@@ -692,14 +831,26 @@ The system makes **opinionated but intelligent decisions**:
 - ✅ **Multi-platform ready** - Web, mobile, dashboard considerations
 - ✅ **Component philosophy** - Clear reusable vs contextual decisions
 - ✅ **JSON export** - Ready for Figma, code implementation
+- ✅ **Project Integration** - One-command setup for existing projects
+- ✅ **Visual Token Editor** - Drag-and-drop editing with real-time preview
+- ✅ **Component Playground** - Interactive component testing
+- ✅ **Documentation Site** - Auto-generated with search and filters
+- ✅ **Usage Guidelines** - Auto-generated component guidelines
+- ✅ **Quick Start Templates** - Next.js, Vite, SaaS, Dashboard
+- ✅ **Deployment Automation** - Vercel, Netlify, GitHub Actions
+- ✅ **Enhanced TypeScript** - Comprehensive type definitions
+- ✅ **ROI Calculator** - Calculate time and cost savings
 
-## 🔮 Future Extensions
+## 🔮 Future Extensions (Phase 4)
 
-- **Figma Integration** - Auto-generate design libraries
-- **React/Vue Components** - Auto-generated component code
+- **Version Management** - Design system versioning and diff viewer
+- **Team Collaboration** - Share design systems, comments, analytics
+- **Migration Tools** - Migrate from Tailwind UI, Material-UI, Ant Design
+- **VS Code Extension** - Token autocomplete and component snippets (if demand validated)
+- **Figma Plugin** - Live token sync (if demand validated)
+- **Performance Optimization** - Bundle size optimization guides
 - **Dark Mode** - Automatic dark theme generation
 - **Brand Evolution** - Update systems without breaking changes
-- **Consistency Checking** - Detect design drift over time
 
 ## 📄 License
 

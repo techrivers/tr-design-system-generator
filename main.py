@@ -42,7 +42,7 @@ class DesignSystemGenerator:
 
         # Step 2: Visual Identity
         print("\n2️⃣ Generating visual tokens with Visual Identity Agent...")
-        design_tokens = self.visual_identity.generate_design_tokens(design_principles)
+        design_tokens = self.visual_identity.generate_design_tokens(design_principles, input_data.product_idea)
         print(f"   🎨 Generated {len(design_tokens.colors)} color tokens")
         print(f"   📝 Generated {len(design_tokens.typography)} typography tokens")
         print(f"   📐 Generated {len(design_tokens.spacing)} spacing tokens")
